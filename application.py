@@ -1,10 +1,11 @@
 import os
+import requests
 
 from flask import Flask, session, render_template, flash, request, redirect
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-
+from werkzeug.security import check_password_hash, generate_password_hash
 
 
 app = Flask(__name__)
@@ -30,6 +31,7 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
+        # BASE DE DATOS INTERACTIVE
         user = db.execute("""SELECT id, username, hash FROM users WHERE username = ?""", username)
 
         if not user:
@@ -64,6 +66,7 @@ def register():
 
         hash = generate_password_hash(password)
 
+        # BASE DE DATOS INTERACTIVE
         db.execute(
             """INSERT INTO users(username, hash) VALUES(?, ?)""", username, hash)
 
@@ -74,7 +77,10 @@ def register():
 
 @app.route("/")
 def index():
-    return "Project 1: TODO"
+    isbn='1632168146'
+    response = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json()
+    print(response)
+    return response
 
 
 
