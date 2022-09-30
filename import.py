@@ -15,8 +15,10 @@ db = scoped_session(sessionmaker(bind=engine))
 
 def main():
     books = open("vuelos.csv")
-    registros = csv.reader(books)
+    rows = csv.reader(books)
 
+    db.execute()
+    db.commit()
 
 if __name__ == "__main__":
     main()

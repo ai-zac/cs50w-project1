@@ -83,6 +83,13 @@ def index():
     return response
 
 
+@app.route("/reseñas")
+def reseñas():
+    db.execute()
+        # insert reseñas. 
+    db.commit()
+
+
 
 if __name__ == "__main__":
     app.run()
