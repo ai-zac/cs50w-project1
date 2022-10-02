@@ -1,0 +1,16 @@
+{% extends "index.html" %}
+
+{% block tittle %}
+    Home
+{% endblock %}
+
+{% block main %}
+<h1>REGISTER</h1>
+<form action="/register" method="post">
+    <input type="text" name="username" placeholder="Nombre" required>
+    <input type="password" name="password" placeholder="Contraseña" required>
+    <input type="password" name="confirmation" placeholder="Confirme la contraseña" required>
+    <button type="submit">SEND</button>
+</form>
+{% endblock %}
+

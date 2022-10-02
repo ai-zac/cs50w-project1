@@ -1,0 +1,15 @@
+{% extends "index.html" %}
+
+{% block tittle %}
+    Home
+{% endblock %}
+
+{% block main %}
+<h1>LOGIN</h1>
+<form action="/login" method="post">
+    <input type="text" name="username" placeholder="Nombre" required>
+    <input type="password" name="password" placeholder="Contraseña" required>
+    <button type="submit">SEND</button>
+</form>
+{% endblock %}
+

@@ -4,9 +4,72 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/static/css/bootstrap.css" rel="stylesheet" crossorigin="anonymous">
     <title>{% block title %}{% endblock %}</title>
 </head>
+
 <body>
-    
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">LIBROS RESEÑADOS :D</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor03" aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarColor03">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">MENU</a>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#">SECCION01</a>
+                                <a class="dropdown-item" href="#">SECCION02</a>
+                                <a class="dropdown-item" href="#">SECCION03</a>
+                                <a class="dropdown-item" href="#">SECCION04</a>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                        <a class="nav-link " href="/">Home
+                            <span class="visually-hidden">(current)</span>
+                        </a>
+                        </li>
+
+                        {% if session["user_id"] %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Logout</a>
+                        </li>
+                            {% if session["user_id"] == 1 %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin">Admin</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/register">Register</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% if get_flashed_messages() %}
+        <div class="alert alert-dismissible alert-danger">
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            {{ get_flashed_messages() | join(" ") }}
+        </div>
+        {% endif %}
+
+        {% block main %} {% endblock %}
+    </main>
+
+    <script src="/static/js/bootstrap.bundle.js" crossorigin="anonymous"></script>
 </body>
 </html>
