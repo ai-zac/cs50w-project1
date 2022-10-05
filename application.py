@@ -22,7 +22,8 @@ app.secret_key = secrets.token_hex()
 engine = create_engine(os.getenv("DATABASE_URL"))  
 db = scoped_session(sessionmaker(bind=engine))
 
-
+prueba = db.execute("SELECT * from libros WHERE año_publicacion = 1000").fetchone()
+print(prueba)
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
