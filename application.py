@@ -1,11 +1,14 @@
+from argparse import ArgumentTypeError
 import os
 import secrets
+from textwrap import wrap
 import requests
 
 from flask import Flask, session, render_template, flash, request, redirect, url_for
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
+from login_required import login_required
 
 app = Flask(__name__)
 
@@ -22,8 +25,7 @@ app.secret_key = secrets.token_hex()
 engine = create_engine(os.getenv("DATABASE_URL"))  
 db = scoped_session(sessionmaker(bind=engine))
 
-prueba = db.execute("SELECT * from libros WHERE año_publicacion = 1000").fetchone()
-print(prueba)
+
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
@@ -79,11 +81,12 @@ def register():
 
 @app.route("/")
 def index():
-    return render_template("home.html")
+    return render_template("home.html", session=session)
 #     isbn='1632168146'
 #     response = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json()
 #     print(response)
 #     return response
+
 
 
 
