@@ -17,18 +17,15 @@
 </ul>
 
 <ul id="reseñas">
+    {% for element in reseñas: %}
     <li>
-        <h5>PUNTUAJE</h5>
+        <h5>{{ element["nombre"] }}</h5>
+        <h6>{{ element["puntuaje"] }}</h6>
         <p id="reseña">
-            Lorem ipsum dolor, sit amet consectetur 
-            adipisicing elit. Veniam temporibus, 
-            ab iste suscipit labore quaerat.
+            {{ element["reseña"]}}
         </p>
     </li>
-    <li>
-        ...    
-    </li>
-    ...
+    {% endfor %}
 </ul>
 
 <h3>Puedes compartir alguna reseña por aqui :D</h3>

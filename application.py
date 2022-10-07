@@ -112,10 +112,12 @@ def libro_review():
     list_columns_libros = ["id", "isbn", "title", "author", "year"]
 # * = id, isbn, title, author, year
     book_data = {}
+    reseñas_libro = []
 
     if request.method == "POST":
         isbn = request.form.get("isbn")
         book_db = db.execute(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """).fetchone()
+        avg_ratings_web = db.execute(" SELECT FROM libros ")
         ratings_book = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json() 
 
         for i in range(0, len(list_columns_libros), 1):
@@ -128,7 +130,14 @@ def libro_review():
             except KeyError:
                 book_data[key] = "Sin registro"
 
-        return render_template("libro.html", dataset=book_data)
+        reseñas_db = db.execute(f"""SELECT  puntuaje, reseña, usuarios.nombre FROM reseñas
+                                    JOIN usuarios ON reseñas.usuarios_id = usuarios.id
+                                    WHERE   libros_id = '{book_data['id']}'""").fetchall()
+        
+        for element in reseñas_db:
+            reseñas_libro.append({"puntuaje": element[0], "reseña": element[1], "nombre": element[2]})
+
+        return render_template("libro.html", dataset=book_data, reseñas=reseñas_libro)
 
 
 @app.route("/reseñas_post", methods=["POST", "GET"])
