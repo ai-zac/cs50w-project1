@@ -1,0 +1,41 @@
+{% extends "index.html" %}
+
+{% block tittle %}
+    Review
+{% endblock %}
+
+{% block main %}
+<h1>REVIEW</h1>
+<h1>{{ dataset["title"] }}</h1>
+<h2>{{ dataset["author" ]}}</h2>
+<h3>{{ dataset["year"] }}</h3>
+<h4>isbn: {{ dataset["isbn"] }}</h4>
+<h5>Puntuaje global</h5>
+<ul>
+    <li>Puntuaje promedio: {{ dataset["averageRating"] }}</li>    
+    <li>No. de puntuajes: {{ dataset["ratingsCount"] }}</li>
+</ul>
+
+<ul id="reseñas">
+    <li>
+        <h5>PUNTUAJE</h5>
+        <p id="reseña">
+            Lorem ipsum dolor, sit amet consectetur 
+            adipisicing elit. Veniam temporibus, 
+            ab iste suscipit labore quaerat.
+        </p>
+    </li>
+    <li>
+        ...    
+    </li>
+    ...
+</ul>
+
+<h3>Puedes compartir alguna reseña por aqui :D</h3>
+<form action="/reseñas_post" method="post">
+    <input type="number" min="1" max="5" name="puntuaje" required>
+    <input type="text" name="reseña" required>
+    <input type="hidden" name="id" value="{{ dataset['id'] }}">
+    <button type="submit">SUBMIT</button>
+</form>
+{% endblock %}
