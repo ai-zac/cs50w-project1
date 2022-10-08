@@ -5,24 +5,29 @@
 {% endblock %}
 
 {% block main %}
-<h1>REVIEW</h1>
-<h1>{{ dataset["title"] }}</h1>
-<h2>{{ dataset["author" ]}}</h2>
-<h3>{{ dataset["year"] }}</h3>
-<h4>isbn: {{ dataset["isbn"] }}</h4>
-<h5>Puntuaje global</h5>
+<h1>Acera del libro: " {{ dataset["title"] }} " </h1>
+<h2>Escrito por {{ dataset["author" ]}}</h2>
+<h3>Publicado en el año {{ dataset["year"] }}</h3>
+<h4>codigo ISBN: {{ dataset["isbn"] }}</h4>
+
+<br>
+
+<h5>Puntuaje global (Fuente: Google API)</h5>
 <ul>
     <li>Puntuaje promedio: {{ dataset["averageRating"] }}</li>    
     <li>No. de puntuajes: {{ dataset["ratingsCount"] }}</li>
 </ul>
 
+<br>
+
 <ul id="reseñas">
+    <h5> Reseñas de nuestros usuarios: </h5>
     {% for element in reseñas: %}
     <li>
-        <h5>{{ element["nombre"] }}</h5>
-        <h6>{{ element["puntuaje"] }}</h6>
+        <h5>Por: {{ element["nombre"] }}</h5>
+        <h6>Puntuaje: {{ element["puntuaje"] }}</h6>
         <p id="reseña">
-            {{ element["reseña"]}}
+            " {{ element["reseña"]}} "
         </p>
     </li>
     {% endfor %}

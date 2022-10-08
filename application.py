@@ -2,8 +2,8 @@ import os
 import secrets
 import requests
 
-from flask import Flask, jsonify, session, render_template, flash, request, redirect, url_for
-from sqlalchemy import create_engine, null
+from flask import Flask, jsonify, session, render_template, flash, request, redirect
+from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
 from login_required import login_required

@@ -6,6 +6,10 @@
 
 {% block main %}
 <h1>HOME</h1>
+<p>
+    Aqui podras encontrar informacion de algun libro en especifico
+    , para iniciar solo debes de registrarte y iniciar sesion
+</p>
 {% if session["user_id"] %}
 <form action="/search" class="d-flex" role="search" method="post">
     <input name="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
