@@ -15,6 +15,11 @@ directory/
 │   └── css/ 
 └── templates/  
 ```
+### La Cadena de conexion de la Base de Datos es: 
+```
+postgresql://vkxultcaayidnj:e63238446a5ffa60fba4b1ea8c4c46356750f8cee333b6242b62cc450dd41b81@ec2-3-219-19-205.compute-1.amazonaws.com:5432/d9mbfoic5v5oqc
+```
+
 ---
 Se agregan cosas como:
 ---
