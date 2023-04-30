@@ -1,3 +1,10 @@
+#### TODO:
+- [ ] Update and clean README
+- [ ] Clean the code >:(
+- [ ] Fix the bugs
+- [ ] Translate correctly all the project :)
+- [ ] Resolve heroku's accessibility
+----
 ` <header> `
   # Project-01 WEB50
 
