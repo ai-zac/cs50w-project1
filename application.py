@@ -1,10 +1,10 @@
 import os
 import secrets
-import requests
-
+import requests 
 from flask import Flask, jsonify, session, render_template, flash, request, redirect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
 from login_required import login_required
 
@@ -43,8 +43,9 @@ def register():
 
         hash = generate_password_hash(password)
 
-        db.execute("INSERT INTO usuarios(nombre, contrasena) VALUES(:nombre, :contrasena)", 
-                   {"nombre": username, "contrasena": hash})
+        db.execute(text("""INSERT INTO usuarios(nombre, contrasena) 
+                    VALUES(:nombre, :contrasena)"""), 
+                   {"nombre": username, "contrasena": hash}) 
         db.commit()
 
         flash("The register was sucesfully")
@@ -60,7 +61,9 @@ def login():
         password = request.form.get("password")
 
         # BASE DE DATOS INTERACTIVE
-        user = db.execute("SELECT id, nombre, contrasena FROM usuarios WHERE nombre = :username", {"username": username}).fetchone()
+        user = db.execute(text("""SELECT id, nombre, contrasena FROM usuarios 
+                              WHERE nombre = :username"""), 
+                         {"username": username}).fetchone()
 
         if not user:
             flash("the user doesnt exist")
@@ -88,12 +91,12 @@ def search():
     if request.method == "POST":
         rqsearch = request.form.get("search")
 
-        data = db.execute(f"""
+        data = db.execute(text(f"""
                     SELECT  titulo ,
                             isbn   FROM libros 
                     WHERE   isbn   LIKE '%{rqsearch}%' OR 
                             titulo LIKE '%{rqsearch}%' OR
-                            autor  LIKE '%{rqsearch}%' """).fetchall()
+                            autor  LIKE '%{rqsearch}%' """)).fetchall()
 
         if data == []:
             flash("No se encontraron resultados, especifica bien las mayusculas o minusculas")
@@ -116,8 +119,7 @@ def libro_review():
 
     if request.method == "POST":
         isbn = request.form.get("isbn")
-        book_db = db.execute(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """).fetchone()
-        avg_ratings_web = db.execute(" SELECT FROM libros ")
+        book_db = db.execute(text(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """)).fetchone()
         ratings_book = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json() 
 
         for i in range(0, len(list_columns_libros), 1):
@@ -130,9 +132,9 @@ def libro_review():
             except KeyError:
                 book_data[key] = "Sin registro"
 
-        reseñas_db = db.execute(f"""SELECT  puntuaje, reseña, usuarios.nombre FROM reseñas
+        reseñas_db = db.execute(text(f"""SELECT  puntuaje, reseña, usuarios.nombre FROM reseñas
                                     JOIN usuarios ON reseñas.usuarios_id = usuarios.id
-                                    WHERE   libros_id = '{book_data['id']}'""").fetchall()
+                                    WHERE   libros_id = '{book_data['id']}'""")).fetchall()
         
         for element in reseñas_db:
             reseñas_libro.append({"puntuaje": element[0], "reseña": element[1], "nombre": element[2]})
@@ -148,9 +150,9 @@ def reseñas_post():
         reseña = request.form.get("reseña")
         id_book = request.form.get("id")
 
-        comprobante = db.execute(f"SELECT * FROM reseñas WHERE usuarios_id = '{ session['user_id'] }' AND libros_id = '{id_book}' ").fetchone()
+        comprobante = db.execute(text(f"SELECT * FROM reseñas WHERE usuarios_id = '{ session['user_id'] }' AND libros_id = '{id_book}' ")).fetchone()
         if comprobante is None:
-            db.execute(f"INSERT INTO reseñas(puntuaje, reseña, usuarios_id, libros_id) VALUES('{puntuaje}', '{reseña}', '{session['user_id']}', '{id_book}')")
+            db.execute(text(f"INSERT INTO reseñas(puntuaje, reseña, usuarios_id, libros_id) VALUES('{puntuaje}', '{reseña}', '{session['user_id']}', '{id_book}')"))
             db.commit()
         else:
             flash("No puedes ingresar más de una reseña o puntuaje al mismo libro")    
@@ -164,7 +166,7 @@ def api(isbn):
     list_columns_libros = ["id", "isbn", "title", "author", "year"]
     book_data = {}
 
-    book_db = db.execute(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """).fetchone()
+    book_db = db.execute(text(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """)).fetchone()
     ratings_book = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json() 
 
     for i in range(0, len(list_columns_libros), 1):

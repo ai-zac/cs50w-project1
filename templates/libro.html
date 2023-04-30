@@ -1,7 +1,7 @@
 {% extends "index.html" %}
 
 {% block tittle %}
-    Review
+Review
 {% endblock %}
 
 {% block main %}
@@ -14,30 +14,30 @@
 
 <h5>Puntuaje global (Fuente: Google API)</h5>
 <ul>
-    <li>Puntuaje promedio: {{ dataset["averageRating"] }}</li>    
-    <li>No. de puntuajes: {{ dataset["ratingsCount"] }}</li>
+  <li>Puntuaje promedio: {{ dataset["averageRating"] }}</li>    
+  <li>No. de puntuajes: {{ dataset["ratingsCount"] }}</li>
 </ul>
 
 <br>
 
 <ul id="reseñas">
-    <h5> Reseñas de nuestros usuarios: </h5>
-    {% for element in reseñas: %}
-    <li>
-        <h5>Por: {{ element["nombre"] }}</h5>
-        <h6>Puntuaje: {{ element["puntuaje"] }}</h6>
-        <p id="reseña">
-            " {{ element["reseña"]}} "
-        </p>
-    </li>
-    {% endfor %}
+  <h5> Reseñas de nuestros usuarios: </h5>
+  {% for element in reseñas: %}
+  <li>
+    <h5>Por: {{ element["nombre"] }}</h5>
+    <h6>Puntuaje: {{ element["puntuaje"] }}</h6>
+    <p id="reseña">
+      " {{ element["reseña"]}} "
+    </p>
+  </li>
+  {% endfor %}
 </ul>
 
 <h3>Puedes compartir alguna reseña por aqui :D</h3>
 <form action="/reseñas_post" method="post">
-    <input type="number" min="1" max="5" name="puntuaje" required>
-    <input type="text" name="reseña" required>
-    <input type="hidden" name="id" value="{{ dataset['id'] }}">
-    <button type="submit">SUBMIT</button>
+  <input type="number" min="1" max="5" name="puntuaje" required>
+  <input type="text" name="reseña" required>
+  <input type="hidden" name="id" value="{{ dataset['id'] }}">
+  <button type="submit">SUBMIT</button>
 </form>
 {% endblock %}
