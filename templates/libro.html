@@ -34,7 +34,7 @@ Review
 </ul>
 
 <h3>Puedes compartir alguna reseña por aqui :D</h3>
-<form action="/reseñas_post" method="post">
+<form action="/add_rating" method="post">
   <input type="number" min="1" max="5" name="puntuaje" required>
   <input type="text" name="reseña" required>
   <input type="hidden" name="id" value="{{ dataset['id'] }}">

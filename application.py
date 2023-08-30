@@ -92,9 +92,9 @@ def search():
         rqsearch = request.form.get("search")
 
         data = db.execute(text(f"""
-                    SELECT  titulo ,
+                    SELECT  titulo,
                             isbn   FROM libros 
-                    WHERE   isbn   LIKE '%{rqsearch}%' OR 
+                     WHERE  isbn   LIKE '%{rqsearch}%' OR 
                             titulo LIKE '%{rqsearch}%' OR
                             autor  LIKE '%{rqsearch}%' """)).fetchall()
 
@@ -102,7 +102,6 @@ def search():
             flash("No se encontraron resultados, especifica bien las mayusculas o minusculas")
             return redirect("/")
         else:
-
             flash("Busqueda correcta")
             return render_template("search.html", dataset=data)
 
@@ -111,9 +110,9 @@ def search():
 @login_required
 def libro_review():
     # Esto se podria mejorar 
-    key_ratings_api = ["averageRating", "ratingsCount"]
     list_columns_libros = ["id", "isbn", "title", "author", "year"]
-# * = id, isbn, title, author, year
+
+    # * = id, isbn, title, author, year
     book_data = {}
     reseñas_libro = []
 
@@ -126,7 +125,8 @@ def libro_review():
             book_data[list_columns_libros[i]] = book_db[i]
 
         # Algunos libros en la API no tienen reseñas 
-        for key in key_ratings_api:
+        api_value_keys = ["averageRating", "ratingsCount"]
+        for key in api_value_keys:
             try:
                 book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
             except KeyError:
@@ -142,9 +142,9 @@ def libro_review():
         return render_template("libro.html", dataset=book_data, reseñas=reseñas_libro)
 
 
-@app.route("/reseñas_post", methods=["POST", "GET"])
+@app.route("/add_rating", methods=["POST", "GET"])
 @login_required
-def reseñas_post():
+def add_rating():
     if request.method == "POST":
         puntuaje = request.form.get("puntuaje")
         reseña = request.form.get("reseña")
@@ -162,30 +162,31 @@ def reseñas_post():
 @app.route("/api/<isbn>")
 @login_required
 def api(isbn):
-    key_ratings_api = ["averageRating", "ratingsCount"]
-    list_columns_libros = ["id", "isbn", "title", "author", "year"]
-    book_data = {}
-
     book_db = db.execute(text(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """)).fetchone()
     ratings_book = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json() 
 
+    # Just add db list elements to dict
+    book_data = {}
+    list_columns_libros = ["id", "isbn", "title", "author", "year"]
     for i in range(0, len(list_columns_libros), 1):
         book_data[list_columns_libros[i]] = book_db[i]
 
-    # Algunos libros en la API no tienen reseñas 
-    for key in key_ratings_api:
+    # Some books doesn't have ratings from Google 
+    api_value_keys = ["averageRating", "ratingsCount"]
+    for key in api_value_keys:
         try:
             book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
         except KeyError:
             book_data[key] = "Sin registro"
 
-    return jsonify( title=book_data["title"],
-                    author=book_data["author"],
-                    year=book_data["year"],
-                    isbn=book_data["isbn"],
-                    review_count=book_data["ratingsCount"],
-                    average_score=book_data["averageRating"]
-                    )
+    return jsonify(
+        title=book_data["title"],
+        author=book_data["author"],
+        year=book_data["year"],
+        isbn=book_data["isbn"],
+        review_count=book_data["ratingsCount"],
+        average_score=book_data["averageRating"]
+    )
 
 
 #     isbn='1632168146' 
