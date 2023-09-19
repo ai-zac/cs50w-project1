@@ -3,6 +3,3 @@ env
 .vim/
 __pycache__
 flask_session
-test.json
-test.py
-test.txt
