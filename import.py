@@ -13,24 +13,23 @@ db = scoped_session(sessionmaker(bind=engine))
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
 
-
-def main():
-    with open("books.csv") as books:
-        rows = csv.DictReader(books)
-        for row in rows:
+with open("books.csv") as books:
+    rows = csv.DictReader(books)
+    for row in rows:
+        try:
+            q = "INSERT INTO books(isbn, title, author, year) VALUES(:i, :t, :a, :y)"
+            qi = text(q)
             db.execute(
-                text(
-                    "INSERT INTO books(isbn, title, author, year) VALUES (:isbn, :title, :author, :year)"
-                ),
+                qi,
                 {
-                    "isbn": row["isbn"],
-                    "title": row["title"],
-                    "author": row["author"],
-                    "year": row["year"],
+                    "i": row["isbn"],
+                    "t": row["title"],
+                    "a": row["author"],
+                    "y": row["year"],
                 },
             )
+        except:
+            db.rollback()
+            raise Exception("an error occurred when importing a book")
+        else:
             db.commit()
-
-
-if __name__ == "__main__":
-    main()
