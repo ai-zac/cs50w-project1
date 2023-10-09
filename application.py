@@ -20,7 +20,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = secrets.token_hex()
 
 # Set up database
-engine = create_engine(os.getenv("DATABASE_URL"))
+engine = create_engine(os.getenv("DATABASE_URL"), pool_pre_ping=True)
 db = scoped_session(sessionmaker(bind=engine))
 
 
