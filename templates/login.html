@@ -7,8 +7,12 @@ Login
 {% block main %}
 <h1>LOGIN</h1>
 <form action="/login" method="post">
-  <input type="text" name="username" placeholder="username" required>
-  <input type="password" name="password" placeholder="password" required>
-  <button type="submit">SEND</button>
+  <div class="input-group mb-3">
+    <span class="input-group-text">@</span>
+    <input class="form-control" type="text" name="username" placeholder="username" required>
+    <span class="input-group-text">#</span>
+    <input class="form-control" type="password" name="password" placeholder="password" required>
+    <button class="btn btn-outline-secondary" type="submit">SEND</button>
+  </div>
 </form>
 {% endblock %}
