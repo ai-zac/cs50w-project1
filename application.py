@@ -1,7 +1,7 @@
 import os
 import secrets
 import requests
-from flask import Flask, jsonify, session, render_template, flash, request, redirect
+from flask import Flask, session, render_template, flash, request, redirect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import text
@@ -42,11 +42,8 @@ def register():
 
         hash = generate_password_hash(p)
 
-        q = text(
-            """INSERT INTO users(username, password) 
-               VALUES(:nombre, :contrasena)"""
-        )
-        db.execute(q, {"nombre": u, "contrasena": hash})
+        qi = text("INSERT INTO users(username, password) VALUES(:nombre, :contrasena)")
+        db.execute(qi, {"nombre": u, "contrasena": hash})
         db.commit()
         flash("The register was sucesfully")
 
@@ -61,8 +58,8 @@ def login():
         u = request.form.get("username")
         p = request.form.get("password")
 
-        q = text("SELECT * FROM users WHERE username = :u")
-        user = db.execute(q, {"u": u}).fetchone()
+        qs = text("SELECT * FROM users WHERE username = :u")
+        user = db.execute(qs, {"u": u}).fetchone()
 
         if not user:
             flash("the user doesn't exist")
@@ -90,14 +87,17 @@ def search():
     if request.method == "POST":
         rqsearch = request.form.get("search")
 
-        q = text(
-            """SELECT  title,
-                       isbn   FROM books 
-                WHERE  isbn   LIKE :r OR 
-                       title  LIKE :r OR
-                       author LIKE :r"""
+        qs = text(
+            """SELECT
+                   title,
+                   isbn
+               FROM books
+               WHERE
+                   isbn LIKE :r
+                   OR title LIKE :r
+                   OR author LIKE :r"""
         )
-        data = db.execute(q, {"r": "%" + rqsearch + "%"}).fetchall()
+        data = db.execute(qs, {"r": "%" + rqsearch + "%"}).fetchall()
 
         if data == []:
             flash(
@@ -108,6 +108,7 @@ def search():
 
         flash("Successful search")
         return render_template("search.html", dataset=data)
+    return redirect("/")
 
 
 @app.route("/book/<isbn>", methods=["POST", "GET"])
@@ -127,9 +128,8 @@ def libro_review(isbn):
             book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
         # Some books doesn't have api ratings
         except KeyError:
-            book_data[key] = "Sin registro"
+            book_data[key] = "No found"
 
-    # Sort books reviews into a dict
     qs = text(
         """
                 SELECT r.score,
@@ -142,6 +142,7 @@ def libro_review(isbn):
             """
     )
     reviews_db = db.execute(qs, {"b": isbn}).fetchall()
+    # Sort books reviews into a dict
     reviews_book = []
     for element in reviews_db:
         reviews_book.append(
@@ -151,27 +152,26 @@ def libro_review(isbn):
     return render_template("libro.html", dataset=book_data, reviews=reviews_book)
 
 
-@app.route("/add_rating", methods=["POST", "GET"])
+@app.route("/rating/add", methods=["POST"])
 @login_required
 def add_rating():
-    if request.method == "POST":
-        i = request.form.get("isbn")
+    i = request.form.get("isbn")
 
-        # Check that only 1 review per book can be sent.
-        qs = text("SELECT * FROM reviews WHERE user_id = :s AND book_id = :i ")
-        check = db.execute(qs, {"s": session["user_id"], "i": i}).fetchone()
-        if check != []:
-            flash("Only one review per book is allowed")
-            redirect(f"/book/{i}")
+    # Check that only 1 review per book can be sent.
+    qs = text("SELECT * FROM reviews WHERE user_id = :s AND book_id = :i")
+    check = db.execute(qs, {"s": session["user_id"], "i": i}).fetchone()
+    if check != []:
+        flash("Only one review per book is allowed")
+        redirect(f"/book/{i}")
 
-        # Save review
-        s = request.form.get("score")
-        c = request.form.get("content")
-        qi = text(
-            "INSERT INTO reviews(score, content, user_id, book_id) VALUES(:s, :c, :u, :b)"
-        )
-        db.execute(qi, {"s": s, "c": c, "u": session["user_id"], "b": i})
-        db.commit()
+    # Save review
+    s = request.form.get("score")
+    c = request.form.get("content")
+    qi = text(
+        "INSERT INTO reviews(score, content, user_id, book_id) VALUES(:s, :c, :u, :b)"
+    )
+    db.execute(qi, {"s": s, "c": c, "u": session["user_id"], "b": i})
+    db.commit()
     return redirect(f"/book/{i}")
 
 
@@ -183,7 +183,7 @@ def api(isbn):
     book_db = db.execute(qs, {"i": isbn}).fetchone()
     book_data = book_tuple_to_dict(book_db)
 
-    # Some books doesn't have api ratings 
+    # Some books doesn't have api ratings
     url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn
     ratings_book = requests.get(url).json()
     api_value_keys = ["averageRating", "ratingsCount"]
@@ -191,13 +191,13 @@ def api(isbn):
         try:
             book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
         except KeyError:
-            book_data[key] = "Sin registro"
+            book_data[key] = "No found"
 
-    return jsonify(
-        title=book_data["title"],
-        author=book_data["author"],
-        year=book_data["year"],
-        isbn=book_data["isbn"],
-        review_count=book_data["ratingsCount"],
-        average_score=book_data["averageRating"],
-    )
+    return {
+        "title": book_data["title"],
+        "author": book_data["author"],
+        "year": book_data["year"],
+        "isbn": book_data["isbn"],
+        "review_count": book_data["ratingsCount"],
+        "average_score": book_data["averageRating"],
+    }
