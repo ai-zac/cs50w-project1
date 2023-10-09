@@ -98,7 +98,6 @@ def search():
                    OR author LIKE :r"""
         )
         data = db.execute(qs, {"r": "%" + rqsearch + "%"}).fetchall()
-
         if data == []:
             flash(
                 """There was an error in the search, please specify the
@@ -106,26 +105,35 @@ def search():
             )
             return redirect("/")
 
+        books = [list(item) for item in data]
+
+        for i in range(0, len(books)):
+            url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + books[i][1]
+            api = requests.get(url).json()
+            img = api["items"][0]["volumeInfo"]["imageLinks"]["thumbnail"]
+            books[i].append(img)
+
         flash("Successful search")
-        return render_template("search.html", dataset=data)
+        return render_template("search.html", dataset=books)
     return redirect("/")
 
 
 @app.route("/book/<isbn>", methods=["POST", "GET"])
 @login_required
 def libro_review(isbn):
-    # Sort db query results into dict
     qs = text("SELECT * FROM books WHERE isbn = :i")
     book_db = db.execute(qs, {"i": isbn}).fetchone()
-    book_data = book_tuple_to_dict(book_db)
+    book_data = book_tuple_to_dict(book_db) # Sort db query results into dict
 
-    # Then add api values into book dict
     url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn
-    ratings_book = requests.get(url).json()
+    api = requests.get(url).json()
+    api = api["items"][0]["volumeInfo"]
+    book_data["img"] = api["imageLinks"]["thumbnail"]
+    # Then add api ratings into book dict
     api_keys = ["averageRating", "ratingsCount"]
     for key in api_keys:
         try:
-            book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
+            book_data[key] = api[key]
         # Some books doesn't have api ratings
         except KeyError:
             book_data[key] = "No found"
@@ -185,11 +193,11 @@ def api(isbn):
 
     # Some books doesn't have api ratings
     url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn
-    ratings_book = requests.get(url).json()
+    api = requests.get(url).json()
     api_value_keys = ["averageRating", "ratingsCount"]
     for key in api_value_keys:
         try:
-            book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
+            book_data[key] = api["items"][0]["volumeInfo"][key]
         except KeyError:
             book_data[key] = "No found"
 

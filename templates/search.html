@@ -6,13 +6,14 @@ Search
 
 {% block main %}
 <h1>SEARCH</h1>
-<ul>
+<div class="card-group">
   {% for element in dataset: %}
-  <li>
-    <button>
-      <a href="/book/{{ element[1] }}">{{ element[0] }}</a>
-    </button>
-  </li>
+  <a class="card w-6" href="/book/{{ element[1] }}">
+    <img src="{{ element[2] }}" class="card-img-top">
+    <div class="card-body">
+      <h5 class="card-title">{{ element[0] }}</h5>
+    </div>
+  </a>
   {% endfor %}
-</ul>
+</div>
 {% endblock %}
