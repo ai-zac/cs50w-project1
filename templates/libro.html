@@ -5,39 +5,39 @@ Review
 {% endblock %}
 
 {% block main %}
-<h1>Acera del libro: " {{ dataset["title"] }} " </h1>
-<h2>Escrito por {{ dataset["author" ]}}</h2>
-<h3>Publicado en el año {{ dataset["year"] }}</h3>
-<h4>codigo ISBN: {{ dataset["isbn"] }}</h4>
+<h1><b>"{{ dataset['title'] }}"</b></h1>
+<h2><i>by {{ dataset['author'] }}</i></h2>
+<h3>published in <b>{{ dataset['year'] }}</b></h3>
+<h4>ISBN code: <b>{{ dataset['isbn'] }}</b></h4>
 
 <br>
 
-<h5>Puntuaje global (Fuente: Google API)</h5>
+<h4><b>Global rating (from Google Books API)</b></h4>
 <ul>
-  <li>Puntuaje promedio: {{ dataset["averageRating"] }}</li>    
-  <li>No. de puntuajes: {{ dataset["ratingsCount"] }}</li>
+  <li>Average rating: {{ dataset["averageRating"] }}</li>    
+  <li>Ratings amount: {{ dataset["ratingsCount"] }}</li>
 </ul>
 
 <br>
 
 <ul id="reseñas">
-  <h5> Reseñas de nuestros usuarios: </h5>
-  {% for element in reseñas: %}
+  <h4><b>Reviews:</b></h4>
+  {% for element in reviews: %}
   <li>
-    <h5>Por: {{ element["nombre"] }}</h5>
-    <h6>Puntuaje: {{ element["puntuaje"] }}</h6>
+    <h5>By {{ element["nombre"] }}</h5>
+    <h6>Score: {{ element["puntuaje"] }}</h6>
     <p id="reseña">
-      " {{ element["reseña"]}} "
+      <i>- "{{ element['reseña'] }}"</i>
     </p>
   </li>
   {% endfor %}
 </ul>
 
-<h3>Puedes compartir alguna reseña por aqui :D</h3>
+<h3>Share your review with us</h3>
 <form action="/add_rating" method="post">
-  <input type="number" min="1" max="5" name="puntuaje" required>
-  <input type="text" name="reseña" required>
-  <input type="hidden" name="id" value="{{ dataset['id'] }}">
+  <input type="number" min="1" max="5" name="score" required>
+  <input type="text" name="content" required>
+  <input type="hidden" name="isbn" value="{{ dataset['isbn'] }}">
   <button type="submit">SUBMIT</button>
 </form>
 {% endblock %}

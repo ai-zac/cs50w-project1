@@ -1,12 +1,12 @@
 import os
 import secrets
-import requests 
+import requests
 from flask import Flask, jsonify, session, render_template, flash, request, redirect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import text
 from werkzeug.security import check_password_hash, generate_password_hash
-from login_required import login_required
+from tools import book_tuple_to_dict, login_required
 
 app = Flask(__name__)
 
@@ -20,9 +20,8 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.secret_key = secrets.token_hex()
 
 # Set up database
-engine = create_engine(os.getenv("DATABASE_URL"))  
+engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
-
 
 
 @app.route("/")
@@ -33,47 +32,47 @@ def index():
 @app.route("/register", methods=["POST", "GET"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        confirmation = request.form.get("confirmation")
+        u = request.form.get("username")
+        p = request.form.get("password")
+        c = request.form.get("confirmation")
 
-        if password != confirmation:
+        if p != c:
             flash("The password isnt check")
             return render_template("register.html")
 
-        hash = generate_password_hash(password)
+        hash = generate_password_hash(p)
 
-        db.execute(text("""INSERT INTO usuarios(nombre, contrasena) 
-                    VALUES(:nombre, :contrasena)"""), 
-                   {"nombre": username, "contrasena": hash}) 
+        q = text(
+            """INSERT INTO users(username, password) 
+               VALUES(:nombre, :contrasena)"""
+        )
+        db.execute(q, {"nombre": u, "contrasena": hash})
         db.commit()
-
         flash("The register was sucesfully")
+
         return redirect("/login")
-    else:
-        return render_template("register.html")
+
+    return render_template("register.html")
 
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        u = request.form.get("username")
+        p = request.form.get("password")
 
-        # BASE DE DATOS INTERACTIVE
-        user = db.execute(text("""SELECT id, nombre, contrasena FROM usuarios 
-                              WHERE nombre = :username"""), 
-                         {"username": username}).fetchone()
+        q = text("SELECT * FROM users WHERE username = :u")
+        user = db.execute(q, {"u": u}).fetchone()
 
         if not user:
-            flash("the user doesnt exist")
+            flash("the user doesn't exist")
             return render_template("login.html")
 
-        if check_password_hash(user[2], password):
+        if check_password_hash(user[2], p):
             session["user_id"] = user[0]
             return redirect("/")
         else:
-            flash("username or password isnt correct")
+            flash("username or password isn't correct")
             return render_template("login.html")
     else:
         return render_template("login.html")
@@ -91,87 +90,102 @@ def search():
     if request.method == "POST":
         rqsearch = request.form.get("search")
 
-        data = db.execute(text(f"""
-                    SELECT  titulo,
-                            isbn   FROM libros 
-                     WHERE  isbn   LIKE '%{rqsearch}%' OR 
-                            titulo LIKE '%{rqsearch}%' OR
-                            autor  LIKE '%{rqsearch}%' """)).fetchall()
+        q = text(
+            """SELECT  title,
+                       isbn   FROM books 
+                WHERE  isbn   LIKE :r OR 
+                       title  LIKE :r OR
+                       author LIKE :r"""
+        )
+        data = db.execute(q, {"r": "%" + rqsearch + "%"}).fetchall()
 
         if data == []:
-            flash("No se encontraron resultados, especifica bien las mayusculas o minusculas")
+            flash(
+                """There was an error in the search, please specify the
+                upper and lower case letters correctly"""
+            )
             return redirect("/")
-        else:
-            flash("Busqueda correcta")
-            return render_template("search.html", dataset=data)
+
+        flash("Successful search")
+        return render_template("search.html", dataset=data)
 
 
-@app.route("/libro_review", methods=["POST", "GET"])
+@app.route("/book/<isbn>", methods=["POST", "GET"])
 @login_required
-def libro_review():
-    # Esto se podria mejorar 
-    list_columns_libros = ["id", "isbn", "title", "author", "year"]
+def libro_review(isbn):
+    # Sort db query results into dict
+    qs = text("SELECT * FROM books WHERE isbn = :i")
+    book_db = db.execute(qs, {"i": isbn}).fetchone()
+    book_data = book_tuple_to_dict(book_db)
 
-    # * = id, isbn, title, author, year
-    book_data = {}
-    reseñas_libro = []
+    # Then add api values into book dict
+    url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn
+    ratings_book = requests.get(url).json()
+    api_keys = ["averageRating", "ratingsCount"]
+    for key in api_keys:
+        try:
+            book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
+        # Some books doesn't have api ratings
+        except KeyError:
+            book_data[key] = "Sin registro"
 
-    if request.method == "POST":
-        isbn = request.form.get("isbn")
-        book_db = db.execute(text(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """)).fetchone()
-        ratings_book = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json() 
+    # Sort books reviews into a dict
+    qs = text(
+        """
+                SELECT r.score,
+                       r.content,
+                       u.username
+                FROM   reviews AS r
+                       join users AS u
+                         ON r.user_id = u.id
+                WHERE  r.book_id = :b
+            """
+    )
+    reviews_db = db.execute(qs, {"b": isbn}).fetchall()
+    reviews_book = []
+    for element in reviews_db:
+        reviews_book.append(
+            {"puntuaje": element[0], "reseña": element[1], "nombre": element[2]}
+        )
 
-        for i in range(0, len(list_columns_libros), 1):
-            book_data[list_columns_libros[i]] = book_db[i]
-
-        # Algunos libros en la API no tienen reseñas 
-        api_value_keys = ["averageRating", "ratingsCount"]
-        for key in api_value_keys:
-            try:
-                book_data[key] = ratings_book["items"][0]["volumeInfo"][key]
-            except KeyError:
-                book_data[key] = "Sin registro"
-
-        reseñas_db = db.execute(text(f"""SELECT  puntuaje, reseña, usuarios.nombre FROM reseñas
-                                    JOIN usuarios ON reseñas.usuarios_id = usuarios.id
-                                    WHERE   libros_id = '{book_data['id']}'""")).fetchall()
-        
-        for element in reseñas_db:
-            reseñas_libro.append({"puntuaje": element[0], "reseña": element[1], "nombre": element[2]})
-
-        return render_template("libro.html", dataset=book_data, reseñas=reseñas_libro)
+    return render_template("libro.html", dataset=book_data, reviews=reviews_book)
 
 
 @app.route("/add_rating", methods=["POST", "GET"])
 @login_required
 def add_rating():
     if request.method == "POST":
-        puntuaje = request.form.get("puntuaje")
-        reseña = request.form.get("reseña")
-        id_book = request.form.get("id")
+        i = request.form.get("isbn")
 
-        comprobante = db.execute(text(f"SELECT * FROM reseñas WHERE usuarios_id = '{ session['user_id'] }' AND libros_id = '{id_book}' ")).fetchone()
-        if comprobante is None:
-            db.execute(text(f"INSERT INTO reseñas(puntuaje, reseña, usuarios_id, libros_id) VALUES('{puntuaje}', '{reseña}', '{session['user_id']}', '{id_book}')"))
-            db.commit()
-        else:
-            flash("No puedes ingresar más de una reseña o puntuaje al mismo libro")    
-        return redirect("/")
+        # Check that only 1 review per book can be sent.
+        qs = text("SELECT * FROM reviews WHERE user_id = :s AND book_id = :i ")
+        check = db.execute(qs, {"s": session["user_id"], "i": i}).fetchone()
+        if check != []:
+            flash("Only one review per book is allowed")
+            redirect(f"/book/{i}")
+
+        # Save review
+        s = request.form.get("score")
+        c = request.form.get("content")
+        qi = text(
+            "INSERT INTO reviews(score, content, user_id, book_id) VALUES(:s, :c, :u, :b)"
+        )
+        db.execute(qi, {"s": s, "c": c, "u": session["user_id"], "b": i})
+        db.commit()
+    return redirect(f"/book/{i}")
 
 
 @app.route("/api/<isbn>")
 @login_required
 def api(isbn):
-    book_db = db.execute(text(f""" SELECT * FROM libros WHERE isbn = '{isbn}' """)).fetchone()
-    ratings_book = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json() 
+    # Sort db query results into dict
+    qs = text("SELECT * FROM books WHERE isbn = :i")
+    book_db = db.execute(qs, {"i": isbn}).fetchone()
+    book_data = book_tuple_to_dict(book_db)
 
-    # Just add db list elements to dict
-    book_data = {}
-    list_columns_libros = ["id", "isbn", "title", "author", "year"]
-    for i in range(0, len(list_columns_libros), 1):
-        book_data[list_columns_libros[i]] = book_db[i]
-
-    # Some books doesn't have ratings from Google 
+    # Some books doesn't have api ratings 
+    url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn
+    ratings_book = requests.get(url).json()
     api_value_keys = ["averageRating", "ratingsCount"]
     for key in api_value_keys:
         try:
@@ -185,15 +199,5 @@ def api(isbn):
         year=book_data["year"],
         isbn=book_data["isbn"],
         review_count=book_data["ratingsCount"],
-        average_score=book_data["averageRating"]
+        average_score=book_data["averageRating"],
     )
-
-
-#     isbn='1632168146' 
-#     response = requests.get("https://www.googleapis.com/books/v1/volumes?q=isbn:"+isbn).json()
-#     print(response)
-#     return response
-
-
-
-

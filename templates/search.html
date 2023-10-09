@@ -1,20 +1,18 @@
 {% extends "index.html" %}
 
 {% block tittle %}
-    Search
+Search
 {% endblock %}
 
 {% block main %}
 <h1>SEARCH</h1>
-<form action="/libro_review" method="post">
-    <ul>
-        {% for element in dataset: %}
-            <li>
-                <button type="submit" name="isbn" value="{{ element[1] }}">
-                    {{ element[0] }}
-                </button>
-            </li>
-        {% endfor %}
-    </ul>
-</form>
+<ul>
+  {% for element in dataset: %}
+  <li>
+    <button>
+      <a href="/book/{{ element[1] }}">{{ element[0] }}</a>
+    </button>
+  </li>
+  {% endfor %}
+</ul>
 {% endblock %}
