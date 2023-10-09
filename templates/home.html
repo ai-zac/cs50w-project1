@@ -1,21 +1,20 @@
 {% extends "index.html" %}
 
-{% block tittle %}
-    Home
+{% block title %}
+Home
 {% endblock %}
 
 {% block main %}
 <h1>HOME</h1>
 <p>
-    Aqui podras encontrar informacion de algun libro en especifico
-    , para iniciar solo debes de registrarte y iniciar sesion
+  Here you can find information about a specific book.
+  to get started you just need to register and log in.
 </p>
 {% if session["user_id"] %}
 <form action="/search" class="d-flex" role="search" method="post">
-    <input name="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-    <button class="btn btn-outline-success" type="submit">Search</button>
+  <input name="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+  <button class="btn btn-outline-success" type="submit">Search</button>
 </form>
 {% endif %}
 
 {% endblock %}
-

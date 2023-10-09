@@ -1,15 +1,14 @@
 {% extends "index.html" %}
 
-{% block tittle %}
-    Login
+{% block title %}
+Login
 {% endblock %}
 
 {% block main %}
 <h1>LOGIN</h1>
 <form action="/login" method="post">
-    <input type="text" name="username" placeholder="Nombre" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <button type="submit">SEND</button>
+  <input type="text" name="username" placeholder="username" required>
+  <input type="password" name="password" placeholder="password" required>
+  <button type="submit">SEND</button>
 </form>
 {% endblock %}
-

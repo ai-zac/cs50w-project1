@@ -1,7 +1,7 @@
 {% extends "index.html" %}
 
-{% block tittle %}
-Review
+{% block title %}
+Preview
 {% endblock %}
 
 {% block main %}
@@ -14,30 +14,46 @@ Review
 
 <h4><b>Global rating (from Google Books API)</b></h4>
 <ul>
-  <li>Average rating: {{ dataset["averageRating"] }}</li>    
+  <li>Average rating: {{ dataset["averageRating"] }}</li>
   <li>Ratings amount: {{ dataset["ratingsCount"] }}</li>
 </ul>
 
 <br>
 
-<ul id="reseñas">
-  <h4><b>Reviews:</b></h4>
+<h4><b>Reviews:</b></h4>
+<div class="card-group" id="reseñas">
   {% for element in reviews: %}
-  <li>
-    <h5>By {{ element["nombre"] }}</h5>
-    <h6>Score: {{ element["puntuaje"] }}</h6>
-    <p id="reseña">
-      <i>- "{{ element['reseña'] }}"</i>
-    </p>
-  </li>
+  <div class="card" style="width: 18rem;">
+    <div class="card-body">
+      <h5 class="card-title"><b>By @{{ element["nombre"] }}</b></h5>
+      <h6>Score: {{ element["puntuaje"] }}</h6>
+      <p class="card-text" id="reseña">
+        <i>- "{{ element['reseña'] }}"</i>
+      </p>
+    </div>
+  </div>
   {% endfor %}
-</ul>
+</div>
+
+<br>
 
 <h3>Share your review with us</h3>
-<form action="/add_rating" method="post">
-  <input type="number" min="1" max="5" name="score" required>
-  <input type="text" name="content" required>
+<form action="/rating/add" method="post">
+  <div class="container text-center">
+    <div class="d-flex input-group">
+      <span class="input-group-text" id="basic-addon1">Score</span>
+      <div class="form-outline w-25">
+        <input class="flex-fill form-control" placeholder="your score" type="number" min="1" max="5" name="score"
+          required>
+      </div>
+      <button class="btn btn-outline-secondary" type="submit">SUBMIT</button>
+    </div>
+
+    <div class="input-group">
+      <textarea class="form-control" placeholder="your review" name="content" required></textarea>
+    </div>
+  </div>
+
   <input type="hidden" name="isbn" value="{{ dataset['isbn'] }}">
-  <button type="submit">SUBMIT</button>
 </form>
 {% endblock %}
