@@ -9,3 +9,12 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorate
+
+
+def book_tuple_to_dict(d):
+    keys = ["isbn", "title", "author", "year"]
+    b = {}
+    for i in range(0, len(keys)):
+        b[keys[i]] = d[i]
+
+    return b
