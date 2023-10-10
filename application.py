@@ -168,9 +168,10 @@ def add_rating():
     # Check that only 1 review per book can be sent.
     qs = text("SELECT * FROM reviews WHERE user_id = :s AND book_id = :i")
     check = db.execute(qs, {"s": session["user_id"], "i": i}).fetchone()
-    if check != []:
+    if check is not None:
         flash("Only one review per book is allowed")
-        redirect(f"/book/{i}")
+        db.rollback()
+        return redirect(f"/book/{i}")
 
     # Save review
     s = request.form.get("score")
@@ -178,7 +179,13 @@ def add_rating():
     qi = text(
         "INSERT INTO reviews(score, content, user_id, book_id) VALUES(:s, :c, :u, :b)"
     )
-    db.execute(qi, {"s": s, "c": c, "u": session["user_id"], "b": i})
+    try:
+        db.execute(qi, {"s": s, "c": c, "u": session["user_id"], "b": i})
+    except:
+        flash("there was an error processing the review")
+        db.rollback()
+        return redirect(f"/book/{i}")
+
     db.commit()
     return redirect(f"/book/{i}")
 

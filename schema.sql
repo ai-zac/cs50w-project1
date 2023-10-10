@@ -11,6 +11,7 @@ CREATE TABLE reviews (
     book_id INTEGER,
     score INTEGER NOT NULL,
     content TEXT NOT NULL,
+    CHECK (score BETWEEN 1 AND 5),
     CONSTRAINT fk_user_id FOREIGN KEY (user_id)
     REFERENCES users (id)
     ON DELETE CASCADE,
