@@ -123,6 +123,12 @@ def search():
 def libro_review(isbn):
     qs = text("SELECT * FROM books WHERE isbn = :i")
     book_db = db.execute(qs, {"i": isbn}).fetchone()
+    if book_db is None:
+        flash(
+            """There was an error in the search, please specify the
+            upper and lower case letters correctly"""
+        )
+        return redirect("/")
     book_data = book_tuple_to_dict(book_db) # Sort db query results into dict
 
     url = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn
@@ -196,6 +202,12 @@ def api(isbn):
     # Sort db query results into dict
     qs = text("SELECT * FROM books WHERE isbn = :i")
     book_db = db.execute(qs, {"i": isbn}).fetchone()
+    if book_db is None:
+        flash(
+            """There was an error in the search, please specify the
+            upper and lower case letters correctly"""
+        )
+        return redirect("/")
     book_data = book_tuple_to_dict(book_db)
 
     # Some books doesn't have api ratings
